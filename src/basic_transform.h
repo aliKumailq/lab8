@@ -7,16 +7,27 @@
 #include <SFML/System/Vector2.hpp>
 
 struct BasicTransform {
-    // TODO: Determine if possible in general, else provide counterexample:
-    // compose(f, g) is equivalent to first applying g, then applying f.
     static BasicTransform compose(const BasicTransform& f, const BasicTransform& g) {
-        return {};
-    };
+      // Note that both scale and trasnlation can be combined into a single 3x3 matrix for a 2d space.
+      // So if we represetn such a matrix for f as A, and a matrix B for g, then we already know that ABx = A(Bx) = (AB)x, where x = [a,b,z]
+      // where z is 0 if x is a vector and 1 if x is a point.
+      //
+      sf::Vector2f newScale = f.scale * g.scale;
+      sf::Vector2f newTranslation = sf::Vector2f(f.scale.x * g.translation.x + f.translation.x,
+                                     f.scale.y * g.translation.y + f.translation.y);
 
-    // TODO: Determine if possible in general, else provide counterexample:
+      return BasicTransform(newScale, newTranslation);
+
+    }
+
     static BasicTransform inverse(const BasicTransform& f) {
-        return {};
-    };
+      // We can compose both the scale S and the Translation T as T(Sx) = (TS)x.
+      // (TS) has a rank of 3 so its invertible.
+
+      sf::Vector2f inverseScale = sf::Vector2f(1.0f, 1.0f) / f.scale;
+      sf::Vector2f inverseTranslation = (-f.translation) / f.scale; 
+      return BasicTransform(inverseScale, inverseTranslation);
+    }
 
     constexpr BasicTransform(const sf::Vector2f& scale = {1.f, 1.f},
                              const sf::Vector2f& translation = {0.f, 0.f})
